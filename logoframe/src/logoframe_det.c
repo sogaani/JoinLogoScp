@@ -141,6 +141,7 @@ int LogoRead_file(const char *logofname, LOGO_READREC *plogor)
 	LOGO_HEADER lgh;
 	LOGO_PIXEL  *ptr;
 	long readed;
+	LOGO_HEADER_V02 lgh_v02;
 
 	fprd = fopen(logofname, "rb");
 	if (!fprd){
@@ -155,14 +156,31 @@ int LogoRead_file(const char *logofname, LOGO_READREC *plogor)
 		fclose(fprd);
 		return 2;
 	}
-	if (strncmp(lfh.str, "<logo data file", 15) != 0){
+	// check version
+	int ver;
+	if (strncmp(lfh.str, "<logo data file ver0.1", 22) == 0){
+		ver = 1;
+	}
+	else if (strncmp(lfh.str, "<logo data file ver0.2", 22) == 0){
+		ver = 2;
+	}
+	else{
 		fprintf(stderr, "error: failed logo header check '%s'\n", logofname);
 		fclose(fprd);
 		return 2;
 	}
 
 	// get logo header
-	readed = fread(&lgh, sizeof(LOGO_HEADER), 1, fprd);
+	readed = 0;
+	if (ver == 1){
+		readed = fread(&lgh, sizeof(LOGO_HEADER), 1, fprd);
+	}
+	else if (ver == 2){			// add for ver 0.2
+		readed = fread(&lgh_v02, sizeof(LOGO_HEADER_V02), 1, fprd);
+		// convert
+		memset(&lgh,0,sizeof(LOGO_HEADER));
+		memcpy(&(lgh.x),&(lgh_v02.x),sizeof(short)*8);
+	}
 	if (readed < 1){
 		fprintf(stderr, "error: failed in reading logoheader \n");
 		fclose(fprd);
@@ -465,7 +483,7 @@ int LogoSet_mem(LOGO_PARAMREC *plogop, const LOGO_READREC *plogor, const LOGO_TH
 	i = LOGO_MAX_DP * 85 / 100;						// start from 85%
 	while(ncount > 0 && i > LOGO_MAX_DP * 7 / 100){
 		num += histdp[i];
-		if (num >= num_total/2){				// update until 1/2+3%
+		if (num >= num_total/2 && num_total >= 200){	// update until 1/2+3%
 			ncount --;
 			loc_dp = i;
 		}
@@ -540,89 +558,46 @@ int LogoSet_edge(LOGO_PARAMREC *plogop){
 		dif_thres = 20;
 	}
 
-	// detect logo column edge
-	pt_dif = plogop->dif_y_col;
-	total_dif = 0;
-	total_dif_c1 = 0;
-	total_dif_c2 = 0;
-	logo_numline = 0;
-	interlace = plogop->yy % 2;
-	for(i=0; i<logo_height; i++){
-		pt_dp0   = &(plogop->dp_y[logo_numline]);
-		pt_dp1   = &(plogop->dp_y[logo_numline + interval]);
-		pt_data0 = &(plogop->y[logo_numline]);
-		pt_data1 = &(plogop->y[logo_numline + interval]);
-		for(j=0; j<logo_width; j++){
-			if (j >= logo_width - interval){
-				fdif = 0;
-			}
-			else{
-				data0 = (*pt_data0);
-				data1 = (*pt_data1);
-				d1 = ConvLogo(       0, *pt_dp0, data0) - ConvLogo(       0, *pt_dp1, data1);
-				d2 = ConvLogo(256 << 4, *pt_dp0, data0) - ConvLogo(256 << 4, *pt_dp1, data1);
-				d1a = abs(d1);
-				d2a = abs(d2);
-				if ((d1a > (dif_thres << 4)) ||
-					(d2a > (dif_thres << 4))){
-					fdif = 1;
-					total_dif ++;
-					if (interlace == 0){
-						total_dif_c1 ++;
-					}
-					else{
-						total_dif_c2 ++;
-					}
-				}
-				else{
-					fdif = 0;
-				}
-			}
-			*pt_dif = fdif;
-			pt_dif ++;
-			pt_dp0 ++;
-			pt_dp1 ++;
-			pt_data0 ++;
-			pt_data1 ++;
-		}
-		logo_numline += logo_width;
-		interlace = 1 - interlace;
-	}
-
-	// detect logo row edge
-	pt_dif = plogop->dif_y_row;
-	logo_numline = 0;
-	interlace = plogop->yy % 2;
-	for(i=0; i<logo_height; i++){
-		if (i >= logo_height - interval){
-			memset(pt_dif, 0, sizeof(char) * logo_width);
-			pt_dif += logo_width;
-		}
-		else{
+	dif_thres += 2;
+	do{
+		dif_thres -= 2;
+		// detect logo column edge
+		pt_dif = plogop->dif_y_col;
+		total_dif = 0;
+		total_dif_c1 = 0;
+		total_dif_c2 = 0;
+		logo_numline = 0;
+		interlace = plogop->yy % 2;
+		for(i=0; i<logo_height; i++){
 			pt_dp0   = &(plogop->dp_y[logo_numline]);
-			pt_dp1   = &(plogop->dp_y[logo_numline + (logo_width * interval)]);
+			pt_dp1   = &(plogop->dp_y[logo_numline + interval]);
 			pt_data0 = &(plogop->y[logo_numline]);
-			pt_data1 = &(plogop->y[logo_numline + (logo_width * interval)]);
+			pt_data1 = &(plogop->y[logo_numline + interval]);
 			for(j=0; j<logo_width; j++){
-				data0 = (*pt_data0);
-				data1 = (*pt_data1);
-				d1 = ConvLogo(       0, *pt_dp0, data0) - ConvLogo(       0, *pt_dp1, data1);
-				d2 = ConvLogo(256 << 4, *pt_dp0, data0) - ConvLogo(256 << 4, *pt_dp1, data1);
-				d1a = abs(d1);
-				d2a = abs(d2);
-				if ((d1a > (dif_thres << 4)) ||
-					(d2a > (dif_thres << 4))){
-					fdif = 1;
-					total_dif ++;
-					if (interlace == 0){
-						total_dif_c1 ++;
-					}
-					else{
-						total_dif_c2 ++;
-					}
+				if (j >= logo_width - interval){
+					fdif = 0;
 				}
 				else{
-					fdif = 0;
+					data0 = (*pt_data0);
+					data1 = (*pt_data1);
+					d1 = ConvLogo(       0, *pt_dp0, data0) - ConvLogo(       0, *pt_dp1, data1);
+					d2 = ConvLogo(256 << 4, *pt_dp0, data0) - ConvLogo(256 << 4, *pt_dp1, data1);
+					d1a = abs(d1);
+					d2a = abs(d2);
+					if ((d1a > (dif_thres << 4)) ||
+						(d2a > (dif_thres << 4))){
+						fdif = 1;
+						total_dif ++;
+						if (interlace == 0){
+							total_dif_c1 ++;
+						}
+						else{
+							total_dif_c2 ++;
+						}
+					}
+					else{
+						fdif = 0;
+					}
 				}
 				*pt_dif = fdif;
 				pt_dif ++;
@@ -631,10 +606,57 @@ int LogoSet_edge(LOGO_PARAMREC *plogop){
 				pt_data0 ++;
 				pt_data1 ++;
 			}
+			logo_numline += logo_width;
+			interlace = 1 - interlace;
 		}
-		logo_numline += logo_width;
-		interlace = 1 - interlace;
-	}
+
+		// detect logo row edge
+		pt_dif = plogop->dif_y_row;
+		logo_numline = 0;
+		interlace = plogop->yy % 2;
+		for(i=0; i<logo_height; i++){
+			if (i >= logo_height - interval){
+				memset(pt_dif, 0, sizeof(char) * logo_width);
+				pt_dif += logo_width;
+			}
+			else{
+				pt_dp0   = &(plogop->dp_y[logo_numline]);
+				pt_dp1   = &(plogop->dp_y[logo_numline + (logo_width * interval)]);
+				pt_data0 = &(plogop->y[logo_numline]);
+				pt_data1 = &(plogop->y[logo_numline + (logo_width * interval)]);
+				for(j=0; j<logo_width; j++){
+					data0 = (*pt_data0);
+					data1 = (*pt_data1);
+					d1 = ConvLogo(       0, *pt_dp0, data0) - ConvLogo(       0, *pt_dp1, data1);
+					d2 = ConvLogo(256 << 4, *pt_dp0, data0) - ConvLogo(256 << 4, *pt_dp1, data1);
+					d1a = abs(d1);
+					d2a = abs(d2);
+					if ((d1a > (dif_thres << 4)) ||
+						(d2a > (dif_thres << 4))){
+						fdif = 1;
+						total_dif ++;
+						if (interlace == 0){
+							total_dif_c1 ++;
+						}
+						else{
+							total_dif_c2 ++;
+						}
+					}
+					else{
+						fdif = 0;
+					}
+					*pt_dif = fdif;
+					pt_dif ++;
+					pt_dp0 ++;
+					pt_dp1 ++;
+					pt_data0 ++;
+					pt_data1 ++;
+				}
+			}
+			logo_numline += logo_width;
+			interlace = 1 - interlace;
+		}
+	}while((total_dif_c1 < 100 || total_dif_c2 < 100) && dif_thres > 16);  // ver1.21
 	plogop->total_dif = total_dif;
 	plogop->total_dif_c1 = total_dif_c1;
 	plogop->total_dif_c2 = total_dif_c2;
@@ -2002,7 +2024,7 @@ int LogoCalc_getdif(LOGO_CALCREC *plogoc1, LOGO_CALCREC *plogoc2, LOGO_PARAMREC 
 // １画像−集計
 // １枚の画像データ集計結果（エッジ検出）からロゴ有無を検出
 //---------------------------------------------------------------------
-int LogoCalc_summary(LOGO_CALCREC *plogoc){
+int LogoCalc_summary(LOGO_CALCREC *plogoc, LOGO_PARAMREC *plogop){
 	long val_hist, val_hist_max, val_hist_sum;
 	long  cnt_logo_both;
 	long  cnt_logo_lim;
@@ -2232,9 +2254,19 @@ int LogoCalc_summary(LOGO_CALCREC *plogoc){
 				cnt_logo_lim = 21;
 			}
 		}
-		else if (cntf_valid * 5 > plogoc->total_dif && cntf_valid > 4){
-			if (cntf_valid <= 35){
-				cntf_valid = 35;
+		else if (cntf_valid > 4){
+			if ((cntf_valid * 5 > plogoc->total_dif) ||
+				(cntf_valid * 7 > plogoc->total_dif && cntf_valid > 25)){
+				if (plogop->thres_dp_y < LOGO_MAX_DP * 13 / 100){
+					if (cntf_valid <= 35){
+						cntf_valid = 35;
+					}
+				}
+				else{
+					if (cntf_valid <= 34){
+						cntf_valid = 34;
+					}
+				}
 			}
 		}
 	}
@@ -2256,7 +2288,8 @@ int LogoCalc_summary(LOGO_CALCREC *plogoc){
 		plogoc->rank_unclear = 1;
 	}
 	else if (((cnt_logo_both > 20) && (cnt_logo_lim > 20) && (rate_logoon < 35 || rate_logoon > 65)) ||
-		((cntf_valid > 35) && (rate_logoon < 35 || rate_logoon > 65))){
+		((cntf_valid > 35) && (rate_logoon < 35 || rate_logoon > 65)) ||
+		((cntf_valid == 35) && (rate_logoon < 15 || rate_logoon > 75))){
 		plogoc->rank_unclear = 2;
 	}
 	else{
@@ -2681,8 +2714,8 @@ void LogoCalc(LOGO_DATASET *pl, const BYTE *data, int pitch, int nframe){
 	LogoCalc_getdif( plogoc1, plogoc2, plogop, data, pitch,
 					 plogot->thres_ymax, plogot->thres_yedge,
 					 plogot->thres_ydif, plogot->thres_yoffedg);
-	LogoCalc_summary( plogoc1 );
-	LogoCalc_summary( plogoc2 );
+	LogoCalc_summary( plogoc1, plogop );
+	LogoCalc_summary( plogoc2, plogop );
 	LogoCalc_areasummary( plogoc1, plogot->thres_yedge, plogot->num_areaset );
 	LogoCalc_areasummary( plogoc2, plogot->thres_yedge, plogot->num_areaset );
 	LogoCalc_savedata( plogof, plogoc1, plogoc2, nframe );
@@ -3095,9 +3128,9 @@ void LogoFind_fine(LOGO_FRAMEREC *plogof){
 		else{
 			loc_st = plogof->res[i-1].frm_fall + 1;
 		}
-		if (loc_ed - loc_st > 1800){
-			loc_st = loc_ed - 1800;
-		}
+//		if (loc_ed - loc_st > 1800){
+//			loc_st = loc_ed - 1800;
+//		}
 		loc_cand = LogoFind_fine_getloc(&loc_short, &loc_long, plogof, loc_ed, loc_st);
 #ifdef DEBUG_PRINT_DET
 		if (plogof->res[i].frm_rise != loc_cand){  // only debug
@@ -3111,9 +3144,9 @@ void LogoFind_fine(LOGO_FRAMEREC *plogof){
 		// revise fall edge
 		loc_ed = plogof->res[i].frm_fall + 1;
 		loc_st = plogof->res[i].frm_rise + 1;
-		if (loc_ed - loc_st > 1800){
-			loc_st = loc_ed - 1800;
-		}
+//		if (loc_ed - loc_st > 1800){
+//			loc_st = loc_ed - 1800;
+//		}
 		loc_cand = LogoFind_fine_getloc(&loc_short, &loc_long, plogof, loc_st, loc_ed);
 #ifdef DEBUG_PRINT_DET
 		if (plogof->res[i].frm_fall != loc_cand){  // only debug

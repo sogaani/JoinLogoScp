@@ -49,6 +49,7 @@ typedef struct {
 
 /* ロゴ名最大文字数（終端\0含む） */
 #define LOGO_MAX_NAME 32
+#define LOGO_MAX_NAME_V02 256
 
 /*--------------------------------------------------------------------
 *	LOGO_HEADER 構造体
@@ -61,6 +62,15 @@ typedef struct {
 	short    fi, fo;    			/* デフォルトのFadeIn/Out */
 	short    st, ed;    			/* デフォルトの開始・終了  */
 } LOGO_HEADER;
+
+typedef struct {
+	char     name[LOGO_MAX_NAME_V02]; 	/* 名称                   */
+	short    x, y;      				/* 基本位置               */
+	short    h, w;      				/* ロゴ高さ・幅           */
+	short    fi, fo;    				/* デフォルトのFadeIn/Out */
+	short    st, ed;    				/* デフォルトの開始・終了  */
+	char     reserved[240];
+} LOGO_HEADER_V02;
 
 /*--------------------------------------------------------------------
 *	LOGO_PIXEL 構造体

@@ -44,7 +44,7 @@ extern int  MultLogoWrite(MLOGO_DATASET* pml);
 #define INT_MAX 0x7fffffff
 #endif
 
-#define MY_VERSION "logoframe 1.16"
+#define MY_VERSION "logoframe 1.20"
 #define AVS_BUFSIZE 128*1024
 //#define FILE_BUFSIZE 512
 #define CSP_I420 1
