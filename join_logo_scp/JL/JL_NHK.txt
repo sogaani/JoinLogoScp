@@ -5,29 +5,34 @@
 #       NHKを想定した設定
 #
 #----------------------------------------------
-# 開始マージンの設定
+# 開始・終了マージンの設定
 #----------------------------------------------
-# 開始マージンのフレーム（-1の時は設定しない）
-Default base -1
+#--- 開始マージンの設定 ---
+Default base               -1     # 開始マージンのフレーム（-1の時は自動検出）
+Default param_zone_first   0.0    # 最初から指定期間内に全体が収まる構成はロゴなしとする
 
-# 開始マージン付近に候補があれば開始位置として優先させる
-Select S 0 -1.2 1.2 -fromabs $base
+#--- 終了マージンの設定 ---
+Default param_wcomp_last   30.5   # 最後構成ロゴなし扱いとする最大期間
+Default param_zone_last    0.0    # 最後から指定期間内に全体が収まる構成はロゴなしとする
 
 #----------------------------------------------
 # カット設定
 #----------------------------------------------
+#----- カット有無選択 -----
+Default lastcut_num    6    # 最後のロゴ付き宣伝をカットする最大回数
+Default lastcut_long   1    # 最後の長時間（1分超）番宣カット（0:カットなし 1:カット）
+
 #----- ロゴなし時のカット -----
 Default autocm_code    6    # ロゴなし時の15秒単位CM検出（0:なし 1-10:CM検出-大きい程強く検出）
+Default autocm_sub     10   # ロゴなし時の補助設定（0:なし 1:先頭15秒単位構成は少数でもCM化 +10:45秒は含めない）
 Default autocm_scope   0    # 最後から指定秒以降の位置を含む構成は手前がCM扱いなら無条件CM継続
 
-#----- カット有無選択 -----
-Default lastcut_num    6    # 最後のロゴ付き宣伝をカットする最大回数（最大8回）
-Default lastcut_long   1    # 最後の長時間（1分超）番宣カット（0:カットなし 1:カット）
-#----- カット有無選択（従来制御を有効にする） -----
-Default param_addlogo  0    # ロゴあり通常構成（0:制御なし 1:残す） 0で従来ロゴ検出制御にする
+#----- カット有無選択パラメータ -----
 Default param_adduc    0    # ロゴなし不明構成（0:制御なし 1:残す）
 Default param_cuttr    0    # 予告等終了後のロゴ付き15秒単位構成（0:残す 1:カット）
 Default param_cutsp    0    # 番組提供カット（0:残す 1:カット）※誤検出の可能性から残すを推奨
+Default param_nosc     0    # シーンチェンジなし無音位置のCM判断（0:自動 1:使用しない 2:使用する）
+Default param_cntsc    0    # 無音シーンチェンジ数が多い構成内の分離（0:なし 1:あり）
 
 #----- ファイル最後の予告位置認識 -----
 Default cuttr_code     3    # 動作設定（0:検出なし 1:CM明けから数える 2:CM明け／CM直前を自動 3:CM直前から数える）
@@ -61,23 +66,58 @@ EndIf
 
 
 #----------------------------------------------
+# ロゴ位置情報
+#----------------------------------------------
+OptDefault -CutMrgWI 2          # CutMrgIn値の使用判断（0:指定値 1:指定値と0の２点から判断 2:自動判断）
+OptDefault -CutMrgWO 2          # CutMrgOut値の使用判断（0:指定値 1:指定値と0の２点から判断 2:自動判断）
+
+#----------------------------------------------
 # 内部パラメータ設定
 #----------------------------------------------
 Default param_wlogo_trmax  00:02:10   # 予告番宣部分と認識する最大ロゴ期間
 Default param_wcomp_trmax  00:01:10   # 予告番宣部分と認識する１構成あたり最大期間
-Default param_wcomp_last   4.5        # 最後までロゴが続く場合のロゴ位置補正する最大構成期間
 Default param_wlogo_sftmrg 3.5        # ロゴ期間が通常より少し短い場合に延長補正する最大期間
 Default param_wlogo_summin 00:00:20   # ロゴ期間合計が指定期間より短い場合はロゴなしとする
+Default param_wlogo_lgmin  20.0       # 推測時のロゴ有情報確定と認識する期間
+Default param_wlogo_cmmin  40.0       # 推測時のロゴ無情報確定と認識する期間
+Default param_wlogo_revmin 125.0      # CM構成ではないロゴなし期間が不明構成と認識する構成最小期間
+Default param_mgn_cmdetect 0.25       # CM構成で15秒単位ではない可能性と認識する誤差フレーム期間
+Default param_mgn_cmdivide 0.1        # CM構成内部の分割を許可する誤差フレーム期間
+#--- 開始マージン詳細 ---
+Default cutbaselogo        1          # 前番組から続くロゴ（0:制御なし 1:カット許可）
+Default param_pos_first    $base      # 開始マージン位置
+Default param_lvpos_first  $cutbaselogo # 開始マージン設定（0:制御なし 1:先頭からのロゴ無視 2:指定位置最優先 3:Select位置優先）
+Default param_wcomp_first  30.0       # 先頭構成ロゴなしとする最大期間
 
 SetParam CutTR       $param_cuttr
 SetParam CutSP       $param_cutsp
-SetParam AddLogo     $param_addlogo
 SetParam AddUC       $param_adduc
+SetParam TypeNoSc    $param_nosc
+SetParam CancelCntSc $param_cntsc
 SetParam WLogoTRMax  $param_wlogo_trmax
 SetParam WCompTRMax  $param_wcomp_trmax
 SetParam WCompLast   $param_wcomp_last
 SetParam WLogoSftMrg $param_wlogo_sftmrg
 SetParam WLogoSumMin $param_wlogo_summin
+SetParam WLogoLgMin  $param_wlogo_lgmin
+SetParam WLogoCmMin  $param_wlogo_cmmin
+SetParam WLogoRevMin $param_wlogo_revmin
+SetParam MgnCmDetect $param_mgn_cmdetect
+SetParam MgnCmDivide $param_mgn_cmdivide
+SetParam WCompFirst  $param_wcomp_first
+SetParam ZoneFirst   $param_zone_first
+SetParam ZoneLast    $param_zone_last
+SetParam LvPosFirst  $param_lvpos_first
+SetParam PosFirst    $param_pos_first
+#SetParam LogoLevel   $logo_level
+#SetParam LogoRevise  $logo_revise
+SetParam AutoCmSub   $autocm_sub
+
+#----------------------------------------------
+# 開始マージン選択動作
+#----------------------------------------------
+# 開始マージン付近に候補があれば開始位置として優先させる
+Select S 0 -1.2 1.2 -fromabs $base
 
 #----------------------------------------------
 # ロゴなし時の15秒単位CM検出
@@ -89,7 +129,7 @@ AutoCM B -code $autocm_code -scope $autocm_scope
 # 先頭部分の追加カット
 #------------------------------------
 # ・最初のロゴ表示が１分より前に終わる場合は無視
-Abort E -N  1 -Fhead 0 00:01:01 -WithP
+Abort E -N  1 -Fhead 0 00:01:01 -WithP -AC -1.2 1.2
 
 #------------------------------------
 # 最後の追加カット
@@ -99,46 +139,29 @@ Default ftail_ed      00:10:00  # 最後の番組宣伝と認識する最終フ�
 
 # ・最後のロゴ表示が１分以内に終わる場合は無視
 #   （NHK番組宣伝を想定）
-If $lastcut_num >= 1
-  Abort S -NR -1 -Ftail $ftail_st $ftail_ed -LenN -1 00:01:01 -WithN
-EndIf
-If $lastcut_num >= 2
-  Abort S -NR -1 -Ftail $ftail_st $ftail_ed -LenN -1 00:01:01 -WithN
-EndIf
-If $lastcut_num >= 3
-  Abort S -NR -1 -Ftail $ftail_st $ftail_ed -LenN -1 00:01:01 -WithN
-EndIf
-If $lastcut_num >= 4
-  Abort S -NR -1 -Ftail $ftail_st $ftail_ed -LenN -1 00:01:01 -WithN
-EndIf
-If $lastcut_num >= 5
-  Abort S -NR -1 -Ftail $ftail_st $ftail_ed -LenN -1 00:01:01 -WithN
-EndIf
-If $lastcut_num >= 6
-  Abort S -NR -1 -Ftail $ftail_st $ftail_ed -LenN -1 00:01:01 -WithN
-EndIf
-If $lastcut_num >= 7
-  Abort S -NR -1 -Ftail $ftail_st $ftail_ed -LenN -1 00:01:01 -WithN
-EndIf
-If $lastcut_num >= 8
-  Abort S -NR -1 -Ftail $ftail_st $ftail_ed -LenN -1 00:01:01 -WithN
-EndIf
+Repeat $lastcut_num
+  Abort S -NR -1 -Ftail $ftail_st $ftail_ed -LenN -1 00:01:01 -WithN -AC -1.2 1.2
+EndRepeat
 
 # ・最後のロゴ表示が約１０分以内に終わる場合は無視
 #   （NHK番組宣伝が長い場合を想定）
 If $lastcut_long
-  Abort S -NR -1 -Ftail $ftail_st $ftail_ed -LenN 00:01:01 00:10:01 -WithN
+  Abort S -NR -1 -Ftail $ftail_st $ftail_ed -LenN 00:01:01 00:10:01 -WithN -AC -1.2 1.2
 EndIf
 
 #----------------------------------------------
 # 必須設定
 #----------------------------------------------
 # ・最初のロゴ開始以前を強制カット（±１秒は位置確認する。フレーム0は無視）
+#   ±１秒に該当なければ範囲広くして構成推測区切り位置の検索を追加
 Find  S 0 -1.2 1.2 -NR  1 -wide -noedge
+Find  S 0 -10.2 10.2 -NR  1 -wide -noedge -RAC -0.1 0.1
 Force S 0          -NR  1
 
 # ・最後のロゴ終了以降を強制カット（±１秒は位置確認する。最終フレームは無視）
+#   ±１秒に該当なければ範囲広くして構成推測区切り位置の検索を追加
 Find  E 0 -1.2 1.2 -NR -1 -wide -noedge
+Find  E 0 -10.2 10.2 -NR -1 -wide -noedge -RAC -0.1 0.1
 Force E 0          -NR -1
 
 #----------------------------------------------
@@ -157,9 +180,6 @@ If $NOLOGO
   AutoCut TR -Ftail $ftail_st $ftail_ed -code $cuttr_code -limit $cuttr_limit -trscope $cuttr_trscope -tr1stprd $cuttr_tr1stprd
   AutoAdd TR -Ftail $ftail_st $ftail_ed -code $addtr_code1 -limit $cuttr_limit -period $addtr_period1
 Else
-  AutoUp B -code 1
+  AutoUp B -code 2
   AutoCut TR -Ftail $ftail_st $ftail_ed -code $cuttr_code -limit $cuttr_limit_lg -trscope $cuttr_trscope -tr1stprd $cuttr_tr1stprd
 EndIf
-
-#--- ロゴ先頭から90秒地点が無音でそれまで無音なしの場合、OPと認識して分離 ---
-DivLogo S 90.0 89.8 90.2 -NR 1 -LenN 95.0 -1 -SMA -0.1 0.1 -NoSM -80.0 -3.0 -force -confirm
