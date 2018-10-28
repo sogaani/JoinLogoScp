@@ -1,9 +1,22 @@
 // chapter_exe.cpp : コンソール アプリケーションのエントリ ポイントを定義します。
 //
 
-#include "stdafx.h"
 #include "source.h"
 #include "faw.h"
+#include <stdint.h>
+
+#ifndef _WIN32
+#define sprintf_s sprintf
+#define _stricmp  strcasecmp
+#include <malloc.h>
+int fopen_s(FILE **fp,const char *s,const char *m)
+{
+*fp = fopen(s,m);
+return *fp == NULL;
+}
+#define _aligned_malloc(a,b) memalign(b,a)
+#define _aligned_free free
+#endif
 
 // mvec.c
 #define FRAME_PICTURE	1
@@ -19,11 +32,11 @@ int proc_scene_change(
 
 
 // 通常の出力
-void write_chapter(FILE *f, int nchap, int frame, TCHAR *title, INPUT_INFO *iip) {
-	LONGLONG t,h,m;
+void write_chapter(FILE *f, int nchap, int frame, char *title, INPUT_INFO *iip) {
+  int64_t t,h,m;
 	double s;
 
-	t = (LONGLONG)frame * 10000000 * iip->scale / iip->rate;
+	t = (int64_t)frame * 10000000 * iip->scale / iip->rate;
 	h = t / 36000000000;
 	m = (t - h * 36000000000) / 600000000;
 	s = (t - h * 36000000000 - m * 600000000) / 10000000.0;
@@ -33,11 +46,11 @@ void write_chapter(FILE *f, int nchap, int frame, TCHAR *title, INPUT_INFO *iip)
 	fflush(f);
 }
 // 解析用の出力
-void write_chapter_debug(FILE *f, int nchap, int frame, TCHAR *title, INPUT_INFO *iip) {
-	LONGLONG t,h,m;
+void write_chapter_debug(FILE *f, int nchap, int frame, char *title, INPUT_INFO *iip) {
+	int64_t t,h,m;
 	double s;
 
-	t = (LONGLONG)frame * 10000000 * iip->scale / iip->rate;
+	t = (int64_t)frame * 10000000 * iip->scale / iip->rate;
 	h = t / 36000000000;
 	m = (t - h * 36000000000) / 600000000;
 	s = (t - h * 36000000000 - m * 600000000) / 10000000.0;
@@ -48,20 +61,18 @@ void write_chapter_debug(FILE *f, int nchap, int frame, TCHAR *title, INPUT_INFO
 	fflush(f);
 }
 
-int _tmain(int argc, _TCHAR* argv[])
+int main(int argc, const char* argv[])
 {
-	// メモリリークチェック
-	_CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
-	printf(_T("chapter.auf pre loading program.\n"));
-	printf(_T("usage:\n"));
-	printf(_T("\tchapter_exe.exe -v input_avs -o output_txt\n"));
-	printf(_T("params:\n\t-v 入力画像ファイル\n\t-a 入力音声ファイル（省略時は動画と同じファイル）\n\t-m 無音判定閾値（1〜2^15)\n\t-s 最低無音フレーム数\n\t-b 無音シーン検索間隔数\n"));
-	printf(_T("\t-e 無音前後検索拡張フレーム数\n"));
+	printf("chapter.auf pre loading program.\n");
+	printf("usage:\n");
+	printf("\tchapter_exe.exe -v input_avs -o output_txt\n");
+	printf("params:\n\t-v 入力画像ファイル\n\t-a 入力音声ファイル（省略時は動画と同じファイル）\n\t-m 無音判定閾値（1〜2^15)\n\t-s 最低無音フレーム数\n\t-b 無音シーン検索間隔数\n");
+	printf("\t-e 無音前後検索拡張フレーム数\n");
 
-	TCHAR *avsv = NULL;
-	TCHAR *avsa = NULL;
-	TCHAR *out =  NULL;
+	const char *avsv = NULL;
+	const char *avsa = NULL;
+	const char *out =  NULL;
 	short setmute = 50;
 	int setseri = 10;
 	int breakmute = 60;
@@ -70,7 +81,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	int debug = 0;
 
 	for(int i=1; i<argc-1; i++) {
-		char *s	= argv[i];
+		const char *s	= argv[i];
 		if (s[0] == '-') {
 			switch(s[1]) {
 			case 'v':
@@ -105,13 +116,13 @@ int _tmain(int argc, _TCHAR* argv[])
 				i++;
 				break;
 			case '-':
-				if (strcmp(&s[2], _T("debug")) == 0){
+				if (strcmp(&s[2], "debug") == 0){
 					debug = 1;
 				}
-				else if (strcmp(&s[2], _T("thin")) == 0){
+				else if (strcmp(&s[2], "thin") == 0){
 					thin_audio_read = 2;
 				}
-				else if (strcmp(&s[2], _T("serial")) == 0){
+				else if (strcmp(&s[2], "serial") == 0){
 					thin_audio_read = -1;
 				}
 				break;
@@ -134,16 +145,16 @@ int _tmain(int argc, _TCHAR* argv[])
 		return -1;
 	}
 
-	printf(_T("Setting\n"));
-	printf(_T("\tvideo: %s\n\taudio: %s\n\tout: %s\n"), avsv, (strcmp(avsv, avsa) ? avsa : "(within video source)"), out);
-	printf(_T("\tmute: %d seri: %d bmute: %d emute: %d\n"), setmute, setseri, breakmute, extendmute);
+	printf("Setting\n");
+	printf("\tvideo: %s\n\taudio: %s\n\tout: %s\n", avsv, (strcmp(avsv, avsa) ? avsa : "(within video source)"), out);
+	printf("\tmute: %d seri: %d bmute: %d emute: %d\n", setmute, setseri, breakmute, extendmute);
 
 	printf("Loading plugins.\n");
 
 	Source *video = NULL;
 	Source *audio = NULL;
 	try {
-		AuiSource *srcv = new AuiSource();
+		AvsSource *srcv = new AvsSource();
 		srcv->init(avsv);
 		if (srcv->has_video() == false) {
 			srcv->release();
@@ -170,7 +181,7 @@ int _tmain(int argc, _TCHAR* argv[])
 				}
 			} else {
 				// aui
-				AuiSource *aud = new AuiSource();
+				AvsSource *aud = new AvsSource();
 				aud->init(avsa);
 				if (aud->has_audio()) {
 					audio = aud;
@@ -184,7 +195,7 @@ int _tmain(int argc, _TCHAR* argv[])
 		if (audio == NULL) {
 			throw "Error: No Audio!";
 		}
-	} catch(char *s) {
+	} catch(const char *s) {
 		if (video) {
 			video->release();
 		}
@@ -210,19 +221,19 @@ int _tmain(int argc, _TCHAR* argv[])
 	INPUT_INFO &vii = video->get_input_info();
 	INPUT_INFO &aii = audio->get_input_info();
 
-	printf(_T("Movie data\n"));
-	printf(_T("\tVideo Frames: %d [%.02ffps]\n"), vii.n, (double)vii.rate / vii.scale);
-	DWORD fcc = vii.handler;
-	printf(_T("\tVideo Format: %c%c%c%c\n"), fcc & 0xFF, fcc >> 8 & 0xFF, fcc >> 16 & 0xFF, fcc >> 24);
+	printf("Movie data\n");
+	printf("\tVideo Frames: %d [%.02ffps]\n", vii.n, (double)vii.rate / vii.scale);
+	uint32_t fcc = vii.handler;
+	printf("\tVideo Format: %c%c%c%c\n", fcc & 0xFF, fcc >> 8 & 0xFF, fcc >> 16 & 0xFF, fcc >> 24);
 
-	printf(_T("\tAudio Samples: %d [%dHz]\n"), aii.audio_n, aii.audio_format->nSamplesPerSec);
+	printf("\tAudio Samples: %d [%dHz]\n", aii.audio_n, aii.audio_format->nSamplesPerSec);
 
 	if (fcc == 0x32424752 || fcc == 0x38344359) {
-		printf(_T("Error: Unsupported color RGB/YC48."));
+		printf("Error: Unsupported color RGB/YC48.");
 	}
 
 	if (fcc != 0x32595559) {
-		printf(_T("warning: only YUY2 is supported. continues...\n"));
+		printf("warning: only YUY2 is supported. continues...\n");
 		//return -1;
 	}
 
@@ -255,18 +266,21 @@ int _tmain(int argc, _TCHAR* argv[])
 	if (thin_audio_read <= 0){
 		printf("read audio : serial\n");
 	}
-	printf(_T("--------\nStart searching...\n"));
+	printf("--------\nStart searching...\n");
 
 	short mute = setmute;
 	int seri = 0;
-	int cnt_mute = 0;
 	int idx = 1;
 	int volume;
 	int lastmute_scpos = -1;			// -eオプションの検索オーバーラップを考慮して前回位置保持
 	int lastmute_marker = -1;			// マーク表示用の起点位置保持
+	int w = vii.format->biWidth & 0xFFFFFFF0;
+	int h = vii.format->biHeight & 0xFFFFFFF0;
+	unsigned char *pix0 = (unsigned char*)_aligned_malloc(w * h, 32);
+	unsigned char *pix1 = (unsigned char*)_aligned_malloc(w * h, 32);
 
 	// start searching
-	for (int i=0; i<n; i++) {
+	for (int i=0; i<n-setseri; i++) {
 		// searching foward frame
 		if (seri == 0 && thin_audio_read > 0) {		// 間引きしながら無音確認
 			int naudio = audio->read_audio(i+setseri-1, buf);
@@ -303,12 +317,7 @@ int _tmain(int argc, _TCHAR* argv[])
 			if (seri >= setseri) {
 				int start_fr = i - seri;
 
-				printf(_T("mute%2d: %d - %dフレーム\n"), idx, start_fr, seri);
-
-				int w = vii.format->biWidth & 0xFFFFFFF0;
-				int h = vii.format->biHeight & 0xFFFFFFF0;
-				unsigned char *pix0 = (unsigned char*)_aligned_malloc(1920*1088, 32);
-				unsigned char *pix1 = (unsigned char*)_aligned_malloc(1920*1088, 32);
+				fprintf(stderr,"mute%2d: %d - %dフレーム\n", idx, start_fr, seri);
 
 				//--- 区間内のシーンチェンジを取得 ---
 				proc_scene_change(video, &lastmute_scpos, &lastmute_marker, fout, pix0, pix1, w, h,
@@ -316,16 +325,15 @@ int _tmain(int argc, _TCHAR* argv[])
 
 
 				idx++;
-
-				_aligned_free(pix0);
-				_aligned_free(pix1);
 			}
 			seri = 0;
 		} else {
 			seri++;
 		}
 	}
-
+	fprintf(stderr,"end\n");
+	_aligned_free(pix0);
+	_aligned_free(pix1);
 	// 最終フレーム番号を出力（改造版で追加）
 	fprintf(fout, "# SCPos:%d %d\n", n-1, n-1);
 
@@ -717,7 +725,7 @@ int proc_scene_change(
 
 		//--- 結果表示 ---
 		for(int k=0; k<=msel; k++){
-			char *mark = "";
+			const char *mark = "";
 			if (d_max_en[k] == 0) continue;		// シーンチェンジ候補から外れた場合次に
 
 			if (d_max_scrate[k] < THRES_RATE2){	// 全く変化のないシーンチェンジ
@@ -744,16 +752,16 @@ int proc_scene_change(
 			printf("\t SCPos: %d %s\n", d_max_pos[k], mark);
 			ncount_sc ++;
 
-			TCHAR title[256];
-			sprintf_s(title, _T("%dフレーム %s SCPos:%d %d"), seri, mark, d_maxrev_pos[k], d_maxpre_pos[k]);
+			char title[256];
+			sprintf_s(title, "%dフレーム %s SCPos:%d %d", seri, mark, d_maxrev_pos[k], d_maxpre_pos[k]);
 			if (debug == 0){		// normal
 				write_chapter(fout, idx, start_fr, title, &vii);
 			}
 			else{					// for debug
-				TCHAR tmp_title[256];
-				sprintf_s(tmp_title, _T(" Rate:%d"), d_max_scrate[k]);
+				char tmp_title[256];
+				sprintf_s(tmp_title, " Rate:%d", d_max_scrate[k]);
 				strcat(title, tmp_title);
-//				sprintf_s(tmp_title, _T(" : [%d %d] [%d %d] [%d %d]"), d_maxn_mvec[k], d_maxn_mvec2[k], d_max_mvec[k], d_max_mvec2[k], d_maxp_mvec[k], d_maxp_mvec2[k]);
+//				sprintf_s(tmp_title, " : [%d %d] [%d %d] [%d %d]"), d_maxn_mvec[k], d_maxn_mvec2[k], d_max_mvec[k], d_max_mvec2[k], d_maxp_mvec[k], d_maxp_mvec2[k]);
 //				strcat(title, tmp_title);
 				write_chapter_debug(fout, idx, start_fr, title, &vii);
 			}

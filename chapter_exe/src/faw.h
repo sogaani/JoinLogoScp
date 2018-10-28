@@ -1,15 +1,20 @@
-#pragma once
-
-#include "stdafx.h"
+#ifndef __FAW__
+#define __FAW__
+#include "compat.h"
+#include "source.h"
 
 // FAWチェックと、FAWPreview.aufを使っての1フレームデコード
 class CFAW {
 	bool is_half;
 
 	bool load_failed;
-	HMODULE _h;
+	void* _h;
 
+#ifdef _WIN32
 	typedef int (__stdcall *ExtractDecode1FAW)(const short *in, int samples, short *out, bool is_half);
+#else
+	typedef int (*ExtractDecode1FAW)(const short *in, int samples, short *out, bool is_half);
+#endif
 	ExtractDecode1FAW _ExtractDecode1FAW;
 
 	bool load() {
@@ -92,7 +97,7 @@ class FAWDecoder : public NullSource {
 	WAVEFORMATEX fmt;
 public:
 	FAWDecoder(Source *src) : NullSource(), _src(src){
-		ZeroMemory(&fmt, sizeof(fmt));
+		memset(&fmt, 0, sizeof(fmt));
 		fmt.wFormatTag = WAVE_FORMAT_PCM;		
 		fmt.nChannels = 2;
 		fmt.nSamplesPerSec = 48000;
@@ -125,3 +130,4 @@ public:
 		return _cfaw.decodeFAW(buf+j, nsamples-j, buf) / 2;
 	}
 };
+#endif

@@ -71,6 +71,8 @@ typedef struct
         AVSC_DECLARE_FUNC( avs_release_value );
         AVSC_DECLARE_FUNC( avs_release_video_frame );
         AVSC_DECLARE_FUNC( avs_take_clip );
+        AVSC_DECLARE_FUNC( avs_bit_blt );
+        AVSC_DECLARE_FUNC( avs_get_audio );
     } func;
 } avs_hnd_t;
 
@@ -92,6 +94,8 @@ static int internal_avs_load_library( avs_hnd_t *h )
     LOAD_AVS_FUNC( avs_release_value, 0 );
     LOAD_AVS_FUNC( avs_release_video_frame, 0 );
     LOAD_AVS_FUNC( avs_take_clip, 0 );
+    LOAD_AVS_FUNC( avs_bit_blt, 0 );
+    LOAD_AVS_FUNC( avs_get_audio, 0 );
     return 0;
 fail:
     FreeLibrary( h->library );

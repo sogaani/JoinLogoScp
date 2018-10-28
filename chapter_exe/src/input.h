@@ -1,3 +1,6 @@
+#ifndef __INPUT__
+#define __INPUT__
+#include "compat.h"
 //----------------------------------------------------------------------------------
 //	入力プラグイン ヘッダーファイル for AviUtl version 0.99k 以降
 //	By ＫＥＮくん
@@ -17,7 +20,7 @@ typedef struct {
 	int					audio_n;			//	音声サンプル数
 	WAVEFORMATEX		*audio_format;		//	音声フォーマットへのポインタ(次に関数が呼ばれるまで内容を有効にしておく)
 	int					audio_format_size;	//	音声フォーマットのサイズ
-	DWORD				handler;			//	画像codecハンドラ
+	uint32_t		handler;			//	画像codecハンドラ
 	int					reserve[7];
 } INPUT_INFO;
 #define	INPUT_INFO_FLAG_VIDEO				1
@@ -35,22 +38,22 @@ typedef struct {
 	int		flag;				//	フラグ
 								//	INPUT_PLUGIN_FLAG_VIDEO	: 画像をサポートする
 								//	INPUT_PLUGIN_FLAG_AUDIO	: 音声をサポートする
-	LPSTR	name;				//	プラグインの名前
-	LPSTR	filefilter;			//	入力ファイルフィルタ
-	LPSTR	information;		//	プラグインの情報
-	BOOL 	(*func_init)( void );
+	char*	name;				//	プラグインの名前
+	char*	filefilter;			//	入力ファイルフィルタ
+	char*	information;		//	プラグインの情報
+	bool 	(*func_init)( void );
 								//	DLL開始時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
-	BOOL 	(*func_exit)( void );
+	bool 	(*func_exit)( void );
 								//	DLL終了時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
-	INPUT_HANDLE (*func_open)( LPSTR file );
+	INPUT_HANDLE (*func_open)( char* file );
 								//	入力ファイルをオープンする関数へのポインタ
 								//	file	: ファイル名
 								//	戻り値	: TRUEなら入力ファイルハンドル
-	BOOL 	(*func_close)( INPUT_HANDLE ih );
+	bool 	(*func_close)( INPUT_HANDLE ih );
 								//	入力ファイルをクローズする関数へのポインタ
 								//	ih		: 入力ファイルハンドル
 								//	戻り値	: TRUEなら成功
-	BOOL 	(*func_info_get)( INPUT_HANDLE ih,INPUT_INFO *iip );
+	bool 	(*func_info_get)( INPUT_HANDLE ih,INPUT_INFO *iip );
 								//	入力ファイルの情報を取得する関数へのポインタ
 								//	ih		: 入力ファイルハンドル
 								//	iip		: 入力ファイル情報構造体へのポインタ
@@ -68,12 +71,12 @@ typedef struct {
 								//	length	: 読み込むサンプル数
 								//	buf		: データを読み込むバッファへのポインタ
 								//	戻り値	: 読み込んだサンプル数
-	BOOL 	(*func_is_keyframe)( INPUT_HANDLE ih,int frame );
+	bool 	(*func_is_keyframe)( INPUT_HANDLE ih,int frame );
 								//	キーフレームか調べる関数へのポインタ (NULLなら全てキーフレーム)
 								//	ih		: 入力ファイルハンドル
 								//	frame	: フレーム番号
 								//	戻り値	: キーフレームなら成功
-	BOOL	(*func_config)( HWND hwnd,HINSTANCE dll_hinst );
+	bool	(*func_config)( void* hwnd,void* dll_hinst );
 								//	入力設定のダイアログを要求された時に呼ばれる関数へのポインタ (NULLなら呼ばれません)
 								//	hwnd		: ウィンドウハンドル
 								//	dll_hinst	: インスタンスハンドル
@@ -83,12 +86,14 @@ typedef struct {
 #define	INPUT_PLUGIN_FLAG_VIDEO		1
 #define	INPUT_PLUGIN_FLAG_AUDIO		2
 
-BOOL func_init( void );
-BOOL func_exit( void );
-INPUT_HANDLE func_open( LPSTR file );
-BOOL func_close( INPUT_HANDLE ih );
-BOOL func_info_get( INPUT_HANDLE ih,INPUT_INFO *iip );
+bool func_init( void );
+bool func_exit( void );
+INPUT_HANDLE func_open( char* file );
+bool func_close( INPUT_HANDLE ih );
+bool func_info_get( INPUT_HANDLE ih,INPUT_INFO *iip );
 int func_read_video( INPUT_HANDLE ih,int frame,void *buf );
 int func_read_audio( INPUT_HANDLE ih,int start,int length,void *buf );
-BOOL func_is_keyframe( INPUT_HANDLE ih,int frame );
-BOOL func_config( HWND hwnd,HINSTANCE dll_hinst );
+bool func_is_keyframe( INPUT_HANDLE ih,int frame );
+bool func_config( void* hwnd,void* dll_hinst );
+
+#endif

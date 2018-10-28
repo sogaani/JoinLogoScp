@@ -6,8 +6,12 @@
 //		動き検索処理用
 //---------------------------------------------------------------------
 
-#include "stdafx.h"
+#ifdef _WIN32
 #include <Windows.h>
+#else
+#include <string.h>
+#include <algorithm>
+#endif
 #include <stdlib.h>
 #include <limits.h>
 #include <stdio.h>
@@ -474,7 +478,7 @@ int search_change(
 	// tree_searchは本来一致判定閾値までが正しいが、速度向上のためシーンチェンジ閾値までにする
 	if( thres_sc < (min = tree_search( pc, pp, lx, ly, &vx, &vy, x, y, min, pict_struct, method))){
 		//フレーム間の絶対値差が大きければ全探索をおこなう
-		if ( thres_sc < (min = full_search( pc, &pp[vy * lx + vx], lx, ly, &vx, &vy, x+vx, y+vy, min, pict_struct, max(abs(vx),abs(vy))*2 ))){
+		if ( thres_sc < (min = full_search( pc, &pp[vy * lx + vx], lx, ly, &vx, &vy, x+vx, y+vy, min, pict_struct, std::max(abs(vx),abs(vy))*2 ))){
 			// 最初の検索範囲にかからなかった時のため、離れた範囲を探索
 			int vxe = 0;
 			int vye = 0;
