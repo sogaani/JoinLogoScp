@@ -1,6 +1,6 @@
 FROM debian:stretch
-EXPOSE 8888
-ARG CPUCORE="1"
+
+ARG CPUCORE="2"
 ENV DEV="make gcc git g++ checkinstall automake curl wget autoconf build-essential python2.7 libass-dev libfreetype6-dev libsdl1.2-dev libtheora-dev libtool libva-dev libvdpau-dev libvorbis-dev libxcb1-dev libxcb-shm0-dev libxcb-xfixes0-dev pkg-config texinfo zlib1g-dev"
 ENV FFMPEG_VERSION=4.0.2
 ENV FFM_VERSION=2.23
@@ -42,12 +42,12 @@ RUN apt-get update && \
 \
     mkdir /tmp/ffms2_source/ && \
     cd /tmp/ffms2_source/ && \
-    wget https://github.com/FFMS/ffms2/archive/${FFM_VERSION}.tar.gz -O ffms2.tar.gz && \
-    tar xvzf ffms2.tar.gz && \
-    cd /tmp/ffms2_source/ffms2* && \
+    git clone https://github.com/sogaani/ffms2_cplugin -b patches --depth=1 && \
+    cd /tmp/ffms2_source/ffms2_cplugin && \
     ./configure \
       --enable-shared \
       --enable-avxsynth \
+      --enable-pic \
       --prefix=/usr/local \
     && \
     make -j${CPUCORE} && \
