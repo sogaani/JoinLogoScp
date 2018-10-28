@@ -1,0 +1,1 @@
+gcc join_logo_scp.c join_logo_scp_com.c join_logo_scp_auto.c join_logo_scp_adj.c -o join_logo_scp.exe -ffast-math -Wall -Wshadow -Wempty-body -I. -std=gnu99 -fomit-frame-pointer -s -fno-tree-vectorize -fno-zero-initialized-in-bss
