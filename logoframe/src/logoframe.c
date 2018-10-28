@@ -11,13 +11,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
 #include <io.h>
+#else
+#include <strings.h>
+#endif
 #include <fcntl.h>
 #include "avs_internal.c"
 #include "logo.h"
 #include "logoset.h"
 #include "logoset_mul.h"
 
+#ifndef _WIN32
+#define stricmp strcasecmp
+typedef unsigned char BYTE;
+#endif
 
 // logo function
 extern void MultLogoInit(MLOGO_DATASET* pml);
@@ -258,9 +266,9 @@ int main(int argc, const char* argv[])
         fprintf(stderr, "%d/%d fps, ", inf->fps_numerator, inf->fps_denominator);
     fprintf(stderr, "%d frames\n", inf->num_frames);
 
-    if( (csp == CSP_I420 && !avs_is_yv12(inf)) ||
-        (csp == CSP_I422 && !avs_is_yv16(inf)) ||
-        (csp == CSP_I444 && !avs_is_yv24(inf)) )
+    if( (csp == CSP_I420 && 12 != avs_bits_per_pixel(inf)) ||
+        (csp == CSP_I422 && 16 != avs_bits_per_pixel(inf)) ||
+        (csp == CSP_I444 && 24 != avs_bits_per_pixel(inf)) )
     {
         const char *csp_name = csp == CSP_I444 ? "YV24" :
                                csp == CSP_I422 ? "YV16" :

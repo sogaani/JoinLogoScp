@@ -23,6 +23,8 @@
 #ifndef ___LOGO_H
 #define ___LOGO_H
 
+#include <stdint.h>
+
 /* ロゴヘッダ文字列 */
 #define LOGO_FILE_HEADER_STR "<logo data file ver0.1>\0\0\0\0\0"
 #define LOGO_FILE_HEADER_STR_SIZE  28
@@ -35,7 +37,7 @@
 typedef struct {
 	char str[LOGO_FILE_HEADER_STR_SIZE];
 	union{
-		unsigned long l;
+		uint32_t l;
 		unsigned char c[4];
 	} logonum;
 } LOGO_FILE_HEADER;

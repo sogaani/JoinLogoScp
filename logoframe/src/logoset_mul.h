@@ -26,9 +26,13 @@
 #define SECTION_LOGOFRAME  "[logoframe]"
 
 // フォルダ区切り記号
+#ifdef _WIN32
 #define DELIMITER_DIR     '\\'
 #define DELIMITER_STRDIR  "\\"
-
+#else
+#define DELIMITER_DIR     '/'
+#define DELIMITER_STRDIR  "/"
+#endif
 
 // 閾値パラメータ更新保存用（更新フラグ）
 typedef struct {

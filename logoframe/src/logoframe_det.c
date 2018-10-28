@@ -12,8 +12,11 @@ typedef unsigned char BYTE;
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
 #include <io.h>
+#endif
 #include <fcntl.h>
+#include <stdint.h>
 #include "logo.h"
 #include "logoset.h"
 

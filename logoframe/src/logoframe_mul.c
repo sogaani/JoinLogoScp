@@ -4,13 +4,31 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef _WIN32
 #include <windows.h>
-#include <string.h>
 #include <io.h>
+#endif
+#include <string.h>
 #include <fcntl.h>
 #include "logo.h"
 #include "logoset.h"
 #include "logoset_mul.h"
+
+#ifndef _WIN32
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <glob.h>
+#include <unistd.h>
+#include <strings.h>
+#define stricmp strcasecmp
+#define strnicmp strncasecmp
+typedef unsigned char BYTE;
+#ifdef __GNUC__
+typedef long long int INT64;
+#else
+typedef __int64 INT64;
+#endif
+#endif
 
 // logo function of logoframe
 extern void LogoInit(LOGO_DATASET *pl);
@@ -97,7 +115,13 @@ char *strrchrj(char *str, char ch){
 // 失敗時は返り値=0
 //---------------------------------------------------------------------
 int MultLogo_GetModuleFileName(char *str, int maxlen){
+#ifdef _WIN32
 	return GetModuleFileName(NULL, str, maxlen);
+#else
+  ssize_t len = readlink("/proc/self/exe", str, maxlen - 1);
+  if (len != -1) str[len] = '\0';
+  return (len != -1);
+#endif
 }
 
 //---------------------------------------------------------------------
@@ -111,8 +135,13 @@ int MultLogo_GetModuleFileName(char *str, int maxlen){
 //---------------------------------------------------------------------
 int MultLogo_FileListGet(char *baselist[], const char *filename_src)
 {
+#ifdef _WIN32
 	WIN32_FIND_DATA FindFileData;
 	HANDLE hFile;
+#else
+  glob_t globbuf;
+  struct stat st;
+#endif
 	char *strtmp;
 	char *strext;
 	char *newstr;      // for serach (add asterisk from filename_src)
@@ -159,6 +188,7 @@ int MultLogo_FileListGet(char *baselist[], const char *filename_src)
 		}
 		else{
 			// check if folder name
+#ifdef _WIN32
 			hFile = FindFirstFile( newstr, &FindFileData );
 			if (hFile != INVALID_HANDLE_VALUE){
 				if (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY){
@@ -167,6 +197,18 @@ int MultLogo_FileListGet(char *baselist[], const char *filename_src)
 				}
 				FindClose(hFile);
 			}
+#else
+      int ret = glob(newstr, 0, NULL, &globbuf);
+      if (ret == 0){
+        memset(&st, 0, sizeof(st));
+        lstat(globbuf.gl_pathv[0], &st);
+        if (S_ISDIR(st.st_mode)){
+          strcat(newstr, DELIMITER_STRDIR);
+          strcat(newstr2, DELIMITER_STRDIR);
+        }
+      }
+      globfree(&globbuf);
+#endif
 			strcat(newstr, "*");
 			strcat(newstr, EXTNAME_LOGODATA);   // 拡張子がない場合の追加
 		}
@@ -192,11 +234,20 @@ int MultLogo_FileListGet(char *baselist[], const char *filename_src)
 	// get filename
 	if (errnum == 0){
 		n = 0;
+#ifdef _WIN32
 		hFile = FindFirstFile( newstr, &FindFileData );
 		if (hFile != INVALID_HANDLE_VALUE) {
+#else
+    int ret = glob(newstr, 0, NULL, &globbuf);
+    if (ret == 0){
+#endif
 			endf = 0;
 			while(n < FILELISTNUM_MAX && endf == 0){
+#ifdef _WIN32
 				nlen = strlen(FindFileData.cFileName);
+#else
+        nlen = strlen(globbuf.gl_pathv[n]);
+#endif
 				baselist[n] = (char *)malloc( (nlen + nlen2 + 1) * sizeof(char) );
 				if (baselist[n] == NULL){
 					fprintf(stderr, "error:failed in memory allocation.\n");
@@ -205,7 +256,11 @@ int MultLogo_FileListGet(char *baselist[], const char *filename_src)
 				}
 				else{
 					strcpy(baselist[n], newstr2);                  // folder
+#ifdef _WIN32
 					strcat(baselist[n], FindFileData.cFileName);   // name
+#else
+					strcat(baselist[n], globbuf.gl_pathv[n]);   // name
+#endif
 					// sort
 					for(int i=0; i<n; i++){
 						if (strcmp(baselist[i], baselist[n]) > 0){
@@ -215,13 +270,21 @@ int MultLogo_FileListGet(char *baselist[], const char *filename_src)
 						}
 					}
 					// get next filename
+#ifdef _WIN32
 					if ( !FindNextFile( hFile, &FindFileData ) ){
+#else
+          if ( n+1 == globbuf.gl_pathc ){
+#endif
 						endf = 1;
 					}
 					n ++;
 				}
 			}
+#ifdef _WIN32
 			FindClose(hFile);
+#else
+      globfree(&globbuf);
+#endif
 		}
 		if (n==0){
 			fprintf(stderr, "warning:no logo found(%s)\n", newstr);
