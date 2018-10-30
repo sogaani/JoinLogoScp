@@ -1,7 +1,8 @@
 //
 // join_logo_scp呼び出しクラス
 //
-#pragma once
+#ifndef __JLSF__
+#define __JLSF__
 
 class JlsDataset;
 class JlsScript;
@@ -88,3 +89,4 @@ private:
 	std::string m_outscpfile;		// 詳細情報出力ファイル名
 };
 
+#endif

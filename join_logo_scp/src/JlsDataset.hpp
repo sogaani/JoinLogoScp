@@ -12,7 +12,8 @@
 //
 //
 /////////////////////////////////////////////////////////////////////////
-#pragma once
+#ifndef __JLSDATASET__
+#define __JLSDATASET__
 
 #include "CnvStrTime.hpp"
 
@@ -271,3 +272,4 @@ private:
 	// 結果出力用
 	int		m_nscOutDetail;
 };
+#endif

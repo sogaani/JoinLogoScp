@@ -1,7 +1,8 @@
 //
 // Auto系JLコマンド実行用
 //
-#pragma once
+#ifndef __JLSAUTOSCRIPT__
+#define __JLSAUTOSCRIPT__
 
 class JlsCmdArg;
 class JlsCmdLimit;
@@ -127,3 +128,5 @@ private:
 	//--- 保持データ ---
 	JlsAutoArg		m_autoArg;				// JLコマンド（Auto系）現在行の内容データ
 };
+
+#endif

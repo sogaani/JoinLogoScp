@@ -2,7 +2,8 @@
 // JLコマンド実行用
 //
 ///////////////////////////////////////////////////////////////////////
-#pragma once
+#ifndef __JLSSCRIPT__
+#define __JLSSCRIPT__
 
 class JlsReformData;
 class JlsAutoScript;
@@ -369,3 +370,4 @@ private:
 	bool m_exe1st;						// 実行初回の設定用
 };
 
+#endif

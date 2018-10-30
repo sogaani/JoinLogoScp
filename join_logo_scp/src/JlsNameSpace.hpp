@@ -1,7 +1,8 @@
 //
 // join_logo_scp データ用定義
 //
-#pragma once
+#ifndef __JLSNAMESPACE__
+#define __JLSNAMESPACE__
 
 //---------------------------------------------------------------------
 // データ格納用
@@ -541,4 +542,4 @@ namespace jlscmd
 	};
 }
 
-
+#endif

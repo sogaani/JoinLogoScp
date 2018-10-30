@@ -1,7 +1,8 @@
 //
 // JLスクリプト用コマンド内容格納データ
 //
-#pragma once
+#ifndef __JLSCMDSET__
+#define __JLSCMDSET__
 
 ///////////////////////////////////////////////////////////////////////
 //
@@ -159,3 +160,4 @@ public:
 	JlsCmdArg		arg;			// 設定値
 	JlsCmdLimit		limit;			// 設定反映
 };
+#endif

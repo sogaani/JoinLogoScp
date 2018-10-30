@@ -3,14 +3,16 @@
 // を記述します。
 //
 
-#pragma once
+#ifndef __STDFX__
+#define __STDFX__
 
+#ifdef _WIN32
 #include "targetver.h"
-
-#include <stdio.h>
 #include <tchar.h>
-
-
+#else
+#include "compat.h"
+#endif
+#include <stdio.h>
 
 // TODO: プログラムに必要な追加ヘッダーをここで参照してください
 #include <string>
@@ -21,3 +23,5 @@
 #include <memory>
 #include <stdlib.h>
 #include <string.h>
+
+#endif
