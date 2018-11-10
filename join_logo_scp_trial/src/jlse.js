@@ -40,8 +40,8 @@ const main = () => {
   const channel = parseChannel(filename);
   const param = parseParam(channel, filename);
 
-  logoframe(param, channel, filename);
   chapterexe(filename);
+  logoframe(param, channel, filename);
   joinlogoframe(param);
 };
 
