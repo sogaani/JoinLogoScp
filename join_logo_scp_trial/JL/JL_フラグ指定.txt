@@ -5,32 +5,37 @@
 #
 #
 #----------------------------------------------
-# 開始マージンの設定
+# 開始・終了マージンの設定
 #----------------------------------------------
-# 実際に開始するフレーム位置付近を設定。候補が複数あった場合優先させるため使用
-#--- 開始マージンのフレーム（-1の時は設定しない） ---
-Default base -1
+#--- 開始マージンの設定 ---
+Default base               -1     # 開始マージンのフレーム（-1の時は自動検出）
+Default param_zone_first   0.0    # 最初から指定期間内に全体が収まる構成はロゴなし扱いとする
+Default param_lgcut_first  12.0   # 最初からロゴありの時開始マージン最大期間（-1の時はロゴなしと同じ）
 
-#--- 開始マージンより前の前番組から続くロゴ部分カット ---
-Default cutbaselogo 1     # （0:制御なし 1:カット）
-
-#----- 最初のロゴ先頭部分カット -----
-Default cut1st_code   0   # 動作設定（0:カットなし 2:指定秒数の構成時カット）
-Default cut1st_period 3   # カット秒数指定
+#--- 終了マージンの設定 ---
+Default param_wcomp_last   30.5   # 最後構成ロゴなし扱いとする最大期間
+Default param_zone_last    0.0    # 最後から指定期間内に全体が収まる構成はロゴなし扱いとする（-1の時は最後構成の分解を抑制）
 
 #----------------------------------------------
 # 番組構成から判断するカット位置設定
 #----------------------------------------------
+#----- ロゴ情報の優先度 ---
+Default logo_level    6     # 推測時のロゴ使用（1:なし 2-8:ロゴ情報使用-大きい程ロゴ情報優先）
+Default logo_revise   23    # ロゴ使用関連の構成変更（0-4:ロゴ端の削除-大きい程削除 +10:ロゴ内削除あり +20:ロゴ外広域削除あり）
+
 #----- ロゴなし時のカット -----
 Default autocm_code   6     # ロゴなし時の15秒単位CM検出（0:なし 1-10:CM検出-大きい程強く検出）
+Default autocm_sub    10    # ロゴなし時の補助設定（0:なし 1:先頭15秒単位構成は少数でもCM化 +10:45秒は含めない）
 Default autocm_scope  40    # 最後から指定秒以降の位置を含む短時間構成は手前がCM扱いならCM継続
+Default autocm_scopex 0     # 最後から指定秒以降の位置に含まれる60/90/120秒構成はCM扱い
 Default use_autocmtr  1     # ロゴなし時の予告検出拡張（0:なし 1:あり）
 
 #----- カット有無選択 -----
-Default param_addlogo 1     # ロゴあり通常構成（0:制御なし 1:残す）
 Default param_adduc   0     # ロゴなし不明構成（0:制御なし 1:残す）
 Default param_cuttr   0     # 予告等終了後のロゴ付き15秒単位構成（0:残す 1:カット）
 Default param_cutsp   0     # 番組提供カット（0:残す 1:カット）※誤検出の可能性から残すを推奨
+Default param_nosc    0     # シーンチェンジなし無音位置のCM判断（0:自動 1:使用しない 2:使用する）
+Default param_cntsc   0     # 無音シーンチェンジ数が多い構成内の分離（0:なし 1:あり）
 
 #----- ファイル最後の予告位置認識 -----
 Default cuttr_code    2    # 動作設定（0:検出なし 1:CM明けから数える 2:CM明け／CM直前を自動 3:CM直前から数える）
@@ -60,7 +65,7 @@ Default addec_period5 5     # エンドカード検出5の構成指定秒数
 #  +200   : ロゴ付きのみ検索
 #  +300   : 隣接まで含めロゴなしのみ検索
 #  +1000  : 予告・番組提供の後側に限定
-#  +10000 : 構成期間14秒以下で最初に候補となる位置限定
+#  +10000 : 構成期間13秒以下で最初に候補となる位置限定
 #  +20000 : 既存予告が30秒以上ある時は無効とする
 #  +30000 : +10000と+20000の両方
 # 具体的な想定
@@ -88,13 +93,13 @@ Default addspt_scope  120   # 最後番組提供の期間指定時検索秒数
 #（番組提供認識の主な設定値）
 # [code]
 #    0 : 検出しない
-#    1 : 期間6-14秒（隣接）を検索（下2桁目＝0の時、予告（なければロゴ）に隣接部分）
-#   21 : 期間6-14秒（範囲90秒）（下2桁目＝2の時、検索範囲を予告（なければロゴ）から90秒以内に広げる）
+#    1 : 期間6-13秒（隣接）を検索（下2桁目＝0の時、予告（なければロゴ）に隣接部分）
+#   21 : 期間6-13秒（範囲90秒）（下2桁目＝2の時、検索範囲を予告（なければロゴ）から90秒以内に広げる）
 #  206 : 期間15秒（隣接・ロゴ付き）を検索（下3桁目＝2の時、ロゴ付きに限定。下1桁＝6は期間15秒限定）
-#  421 : 期間6-14秒（範囲90秒・カット位置後含む）（下3桁目＝4の時、AutoCutによるカット位置後も検索）
-# 1001 : 期間6-14秒（ロゴ終了側隣接）を検索（下4桁目＝1の時、前側（ロゴ開始側）は候補から外す）
-# 1004 : 期間5-14秒（隣接）を検索（下1桁＝4の時、期間5秒を追加）
-# 4001 : 期間6-14秒（予告と認識した最初の内容を番組提供化＋予告を後ろにずらす）
+#  421 : 期間6-13秒（範囲90秒・カット位置後含む）（下3桁目＝4の時、AutoCutによるカット位置後も検索）
+# 1001 : 期間6-13秒（ロゴ終了側隣接）を検索（下4桁目＝1の時、前側（ロゴ開始側）は候補から外す）
+# 1004 : 期間5-13秒（隣接）を検索（下1桁＝4の時、期間5秒を追加）
+# 4001 : 期間6-13秒（予告と認識した最初の内容を番組提供化＋予告を後ろにずらす）
 # [scope]
 #   下2桁目で検索範囲指定時に上記説明90秒の所を秒数変更
 #
@@ -107,6 +112,33 @@ Default edgest_period 15        # 各ロゴ開始部分のカットする秒数
 Default edgeed_code   0         # 各ロゴ終了部分のカット動作（0:カットなし 2:指定秒構成時カット）
 Default edgeed_period 15        # 各ロゴ終了部分のカットする秒数
 
+#----- 最初のロゴ先頭部分カット -----
+Default cut1st_code   0   # 動作設定（0:カットなし 2:指定秒数の構成時カット）
+Default cut1st_period 3   # カット秒数指定
+
+#----------------------------------------------
+# ロゴ位置情報
+#----------------------------------------------
+OptDefault -CutMrgWI 2          # CutMrgIn値の使用判断（0:指定値 1:指定値と0の２点から判断 2:自動判断）
+OptDefault -CutMrgWO 2          # CutMrgOut値の使用判断（0:指定値 1:指定値と0の２点から判断 2:自動判断）
+
+#----------------------------------------------
+# 内部パラメータ情報
+#----------------------------------------------
+Default param_wlogo_trmax  00:02:10   # 予告番宣部分と認識する最大ロゴ期間
+Default param_wcomp_trmax  00:01:10   # 予告番宣部分と認識する１構成あたり最大期間
+Default param_wlogo_sftmrg 3.5        # ロゴ期間が通常より少し短い場合に延長補正する最大期間
+Default param_wlogo_summin 00:00:20   # ロゴ期間合計が指定期間より短い場合はロゴなしとする
+Default param_wlogo_lgmin  20.0       # 推測時のロゴ有情報確定と認識する期間
+Default param_wlogo_cmmin  40.0       # 推測時のロゴ無情報確定と認識する期間
+Default param_wlogo_revmin 125.0      # CM構成ではないロゴなし期間が不明構成と認識する構成最小期間
+Default param_mgn_cmdetect 0.25       # CM構成で15秒単位ではない可能性と認識する誤差フレーム期間
+Default param_mgn_cmdivide 0.1        # CM構成内部の分割を許可する誤差フレーム期間
+#--- 開始マージン詳細 ---
+Default cutbaselogo        1          # 前番組から続くロゴ（0:制御なし 1:カット許可）
+Default param_pos_first    $base      # 開始マージン位置
+Default param_lvpos_first  $cutbaselogo # 開始マージン設定（0:制御なし 1:先頭からのロゴ無視 2:指定位置最優先 3:Select位置優先）
+Default param_wcomp_first  30.0       # 先頭構成ロゴなしとする最大期間
 
 
 ############# 以降は詳細設定と実際の動作記述 ############
@@ -119,51 +151,54 @@ Default edgeed_period 15        # 各ロゴ終了部分のカットする秒数
 #*************************************************************************
 # ・ANIMAX用の設定
 If ANIMAX
-  Set ASPN     1              # 番組提供なし
-  Set TWTR15A  1              # 予告が見つからない時、15秒以下構成で次構成が10秒なら予告にする
+  Set ASPN     1               # 番組提供なし
+#  Set TWTR15A  1              # 予告が見つからない時、15秒以下構成で次構成が10秒なら予告にする
+  OptSet -CutMrgIn   150       # 切り替わりからロゴ表示開始までの期間
+  OptSet -CutMrgOut  150       # ロゴ表示終了から切り替わりまでの期間
   If $NOLOGO
-    Set NLANIMAX      1       # ロゴなしANIMAX設定
-    Set autocm_scopex 120     # 最後から指定秒以降の位置に含まれる60/90/120秒構成はCM扱い
+    Set NLANIMAX      1        # ロゴなしANIMAX設定
+    Set autocm_scopex 120      # 最後から指定秒以降の位置に含まれる60/90/120秒構成はCM扱い
   EndIf
 EndIf
 
 #----------------------------------------------
 # 内部パラメータ設定
 #----------------------------------------------
-Default param_wlogo_trmax  00:02:10   # 予告番宣部分と認識する最大ロゴ期間
-Default param_wcomp_trmax  00:01:10   # 予告番宣部分と認識する１構成あたり最大期間
-Default param_wcomp_last   4.5        # 最後までロゴが続く場合のロゴ位置補正する最大構成期間
-Default param_wlogo_sftmrg 3.5        # ロゴ期間が通常より少し短い場合に延長補正する最大期間
-Default param_wlogo_summin 00:00:20   # ロゴ期間合計が指定期間より短い場合はロゴなしとする
-
 SetParam CutTR       $param_cuttr
 SetParam CutSP       $param_cutsp
-SetParam AddLogo     $param_addlogo
 SetParam AddUC       $param_adduc
+SetParam TypeNoSc    $param_nosc
+SetParam CancelCntSc $param_cntsc
 SetParam WLogoTRMax  $param_wlogo_trmax
 SetParam WCompTRMax  $param_wcomp_trmax
 SetParam WCompLast   $param_wcomp_last
 SetParam WLogoSftMrg $param_wlogo_sftmrg
 SetParam WLogoSumMin $param_wlogo_summin
+SetParam WLogoLgMin  $param_wlogo_lgmin
+SetParam WLogoCmMin  $param_wlogo_cmmin
+SetParam WLogoRevMin $param_wlogo_revmin
+SetParam MgnCmDetect $param_mgn_cmdetect
+SetParam MgnCmDivide $param_mgn_cmdivide
+SetParam WCompFirst  $param_wcomp_first
+SetParam LgCutFirst  $param_lgcut_first
+SetParam ZoneFirst   $param_zone_first
+SetParam ZoneLast    $param_zone_last
+SetParam LvPosFirst  $param_lvpos_first
+SetParam PosFirst    $param_pos_first
+SetParam LogoLevel   $logo_level
+SetParam LogoRevise  $logo_revise
+SetParam AutoCmSub   $autocm_sub
 
 #----------------------------------------------
 # 開始マージン選択動作
 #----------------------------------------------
+# 過去互換用(SetParam LvPosFirst 3)
 # 開始マージン付近に候補があれば開始位置として優先させる
-If $cutbaselogo
-  Select S 0 -2.2 2.2 -fromabs $base -logoext 0 $base+2.2
-Else
-  Select S 0 -2.2 2.2 -fromabs $base
-EndIf
-
-#----------------------------------------------
-# ロゴなし時の15秒単位CM検出
-#----------------------------------------------
-Default autocm_scopex 0     # 最後から指定秒以降の位置に含まれる60/90/120秒構成はCM扱い
-Default autocm_maxprd 60    # 指定秒を超える構成は15秒単位でもCM扱いにしない
-
-#--- ロゴなし時のみ15秒単位構成をCM化 ---
-AutoCM B -code $autocm_code -scope $autocm_scope -scopex $autocm_scopex -maxprd $autocm_maxprd
+#If $cutbaselogo
+#  Select S 0 -2.2 2.2 -fromabs $base -logoext 0 $base+2.2
+#Else
+#  Select S 0 -2.2 2.2 -fromabs $base
+#EndIf
 
 #----------------------------------------------
 # 最後のロゴなし部分の予告を追加認識
@@ -200,10 +235,18 @@ If HI240
 EndIf
 
 #----------------------------------------------
+# ロゴなし時の15秒単位CM検出
+#----------------------------------------------
+Default autocm_maxprd 60    # 指定秒を超える構成は15秒単位でもCM扱いにしない
+
+#--- ロゴなし時のみ15秒単位構成をCM化 ---
+AutoCM B -code $autocm_code -scope $autocm_scope -scopex $autocm_scopex -maxprd $autocm_maxprd
+
+#----------------------------------------------
 # 最初のロゴ部分カット・延長
 #----------------------------------------------
 Default addsph_period1 5       # 先頭番組提供の構成期間限定時用（優先順位1のみ）
-Default addsph_maxprd1 14      # 先頭番組提供の構成期間限定時用（優先順位1のみ）
+Default addsph_maxprd1 13      # 先頭番組提供の構成期間限定時用（優先順位1のみ）
 Default fhead_st     $base     # 最初の番組提供と認識する先頭フレームからの位置（起点）
 Default fhead_ed     00:13:30  # 最初の番組提供と認識する先頭フレームからの位置（終点）
 Default fhead_name   -Fhead    # 位置を前半に絞る
@@ -211,10 +254,11 @@ Default cut1st_direct  0.0     # 推測構成で見つからない時の最初�
 
 #***************** フラグ内容 ********************************************
 #   ASPL   : 番組提供は16〜25秒を検索
-#   ASPA   : 番組提供は6〜14秒のみ認識
+#   ASPA   : 番組提供は6〜13秒のみ認識
 #   ASPN   : 番組提供なし
 #   HC10   : 最初の10秒は不要
 #   HC5    : 最初の5秒は不要
+#   HC4    : 最初の4秒は不要
 #   HC3    : 最初の3秒は不要
 #   HCA    : 最初の3〜10秒で無音シーンチェンジがあれば不要
 #   HCCM   : 最初に不要カットするロゴ付番宣（15秒か30秒）から始まる
@@ -230,7 +274,7 @@ If ASPL
   Set addsph_maxprd1  25
 EndIf
 
-# ・番組提供は6〜14秒のみ認識
+# ・番組提供は6〜13秒のみ認識
 If ASPA
   Set addsph_code1  1001
   Set addsph_code2  21
@@ -261,6 +305,14 @@ EndIf
 If HC5
   Set cut1st_code   2   # 動作設定（2:指定秒数の構成時カット）
   Set cut1st_period 5   # カット秒数指定
+  Set cut1st_direct 5.0 # 推測構成で見つからない時のカット期間指定
+EndIf
+
+# ・最初のロゴ表示開始直後の3秒無音シーンチェンジはカット（局タイトルを想定）
+If HC4
+  Set cut1st_code   2   # 動作設定（2:指定秒数の構成時カット）
+  Set cut1st_period 4   # カット秒数指定
+  Set cut1st_direct 4.0 # 推測構成で見つからない時のカット期間指定
 EndIf
 
 # ・最初のロゴ表示開始直後の3秒無音シーンチェンジはカット（局タイトルを想定）
@@ -336,7 +388,7 @@ Default addtr_maxprd1  14   # ロゴなし予告検出1の期間指定時構成�
 Default addtr_period2  16   # ロゴなし予告検出2の期間指定時構成最小秒数(code下1桁=5の時)
 Default addtr_maxprd2  29   # ロゴなし予告検出2の期間指定時構成最大秒数(code下1桁=5の時)
 Default addspt_period1 5    # 最後番組提供の構成期間限定時用（優先順位1のみ）
-Default addspt_maxprd1 14   # 最後番組提供の構成期間限定時用（優先順位1のみ）
+Default addspt_maxprd1 13   # 最後番組提供の構成期間限定時用（優先順位1のみ）
 Default addspt_scopen  0    # 最後番組提供の期間指定時検索開始秒数
 Default use_add0tr     0    # 追加の予告が見つからない時のロゴなし予告検出（0:検出しない 1:検出する）
 Default add0tr_code1   0    # 追加の予告が見つからない時のロゴなし予告検出1（0:検出しない 1:隣接15秒未満 21:検索60秒地点構成15秒未満）
@@ -349,10 +401,11 @@ Default add0tr_period1 1    # 追加のロゴなし予告検出1の期間指定�
 Default add0tr_maxprd1 14   # 追加のロゴなし予告検出1の期間指定時構成最大秒数(code下1桁=5の時)
 Default add0tr_period2 16   # 追加のロゴなし予告検出2の期間指定時構成最小秒数(code下1桁=5の時)
 Default add0tr_maxprd2 29   # 追加のロゴなし予告検出2の期間指定時構成最大秒数(code下1桁=5の時)
-Default acmtr_code     4033 # ロゴなし時拡張予告検出
+Default acmtr_code1    4063 # ロゴなし時拡張予告検出
 Default acmtr_period   45   # ロゴなし時拡張予告検出時の構成最大秒数(code下1桁=3の時)
 Default acmtr_scope1   60   # ロゴなし時拡張予告検出時の検索位置1
 Default acmtr_scope2   90   # ロゴなし時拡張予告検出時の検索位置2
+Default acmtr_code2    4043 # ロゴなし時拡張予告検出2
 Default ftail_st      00:00:00  # 最後の予告以降と認識する最終フレームからの位置（起点）
 Default ftail_ed      00:07:00  # 最後の予告以降と認識する最終フレームからの位置（終点）
 If use_addtr
@@ -363,7 +416,7 @@ EndIf
 
 #***************** フラグ内容 ********************************************
 #   ASPL   : 番組提供は16〜25秒を検索
-#   ASPA   : 番組提供は6〜14秒のみ認識
+#   ASPA   : 番組提供は6〜13秒のみ認識
 #   ASPN   : 番組提供なし
 #   TCFULL : 最後のロゴ部分はすべてカットする（予告認識部分以降をすべてカット）
 #   TCLAST : 最後のロゴ部分はすべてカットする（予告検出前に実行）
@@ -414,7 +467,7 @@ If ASPL
   Set addspt_maxprd1  25
 EndIf
 
-# ・番組提供は6〜14秒のみ認識
+# ・番組提供は6〜13秒のみ認識
 If ASPA
   Set addspt_code1  21
   Set addspt_code2  0
@@ -512,8 +565,8 @@ EndIf
 # ・ロゴ有無に関係なく15秒未満１構成をエンドカードとして残す
 If TREB
   Set cutec_code     1     # カット動作設定（0:カットなし 1:カットあり）
-  Set addec_code1    11023 # エンドカード検出1（23:検索90秒以内構成5秒以下 +10000:構成期間14秒以下で候補となる位置に限定）
-  Set addec_period1  14    # エンドカード検出1の構成指定秒数(構成5秒の所を秒数変更)
+  Set addec_code1    11023 # エンドカード検出1（23:検索90秒以内構成5秒以下 +10000:構成期間13秒以下で候補となる位置に限定）
+  Set addec_period1  13    # エンドカード検出1の構成指定秒数(構成5秒の所を秒数変更)
   Set addec_scope1   90    # エンドカード検出1の期間指定時検索終了秒数(code下2桁目=2以上の時使用)
   Set addec_scopen1  0     # エンドカード検出1の期間指定時検索開始秒数(code下2桁目=2以上の時使用)
 EndIf
@@ -521,7 +574,7 @@ EndIf
 # ・ロゴ有無に関係なく5秒（変更可）以下１構成をエンドカードとして残す
 If TRE
   Set cutec_code     1     # カット動作設定（0:カットなし 1:カットあり）
-  Set addec_code1    11023 # エンドカード検出1（23:検索90秒以内構成5秒以下 +10000:構成期間14秒以下で候補となる位置に限定）
+  Set addec_code1    11023 # エンドカード検出1（23:検索90秒以内構成5秒以下 +10000:構成期間13秒以下で候補となる位置に限定）
 #  Set addec_period1  5     # エンドカード検出1の構成指定秒数(構成5秒の所を秒数変更)
   Set addec_scope1   90    # エンドカード検出1の期間指定時検索終了秒数(code下2桁目=2以上の時使用)
   Set addec_scopen1  0     # エンドカード検出1の期間指定時検索開始秒数(code下2桁目=2以上の時使用)
@@ -728,6 +781,27 @@ If NLANIMAX
   Set addtr_maxprd2  30    # ロゴなし予告検出2の期間指定時構成最大秒数(code下1桁=5の時)
 EndIf
 
+
+#***************** フラグ内容 ********************************************
+#   ALSP   : 番組提供はロゴありに限定
+#*************************************************************************
+# ・番組提供はロゴありに限定（先頭部分）３桁目のみ変更で+1,+2を消して+2を改めて追加
+If ALSP
+  EvalNum addsph_code1  200+(${addsph_code1}/1000*1000)+(${addsph_code1}%100)+((${addsph_code1}/100%10&4)*100)
+  EvalNum addsph_code2  200+(${addsph_code2}/1000*1000)+(${addsph_code2}%100)+((${addsph_code2}/100%10&4)*100)
+  EvalNum addsph_code3  200+(${addsph_code3}/1000*1000)+(${addsph_code3}%100)+((${addsph_code3}/100%10&4)*100)
+  EvalNum addsph_code4  200+(${addsph_code4}/1000*1000)+(${addsph_code4}%100)+((${addsph_code4}/100%10&4)*100)
+  EvalNum addsph_code5  200+(${addsph_code5}/1000*1000)+(${addsph_code5}%100)+((${addsph_code5}/100%10&4)*100)
+EndIf
+# ・番組提供はロゴありに限定（最後部分）
+If ALSP
+  EvalNum addspt_code1  200+(${addspt_code1}/1000*1000)+(${addspt_code1}%100)+((${addspt_code1}/100%10&4)*100)
+  EvalNum addspt_code2  200+(${addspt_code2}/1000*1000)+(${addspt_code2}%100)+((${addspt_code2}/100%10&4)*100)
+  EvalNum addspt_code3  200+(${addspt_code3}/1000*1000)+(${addspt_code3}%100)+((${addspt_code3}/100%10&4)*100)
+  EvalNum addspt_code4  200+(${addspt_code4}/1000*1000)+(${addspt_code4}%100)+((${addspt_code4}/100%10&4)*100)
+  EvalNum addspt_code5  200+(${addspt_code5}/1000*1000)+(${addspt_code5}%100)+((${addspt_code5}/100%10&4)*100)
+EndIf
+
 #***************** ここまでフラグ内容 *****************
 
 #--- ファイル最後部分のカット設定 ---
@@ -754,8 +828,9 @@ AutoCut EC -Ftail $ftail_st $ftail_ed -code $cutec_code -limit $cutec_limit -per
 
 If use_autocmtr
   If $NOLOGO
-    AutoAdd TR -Ftail $ftail_st $ftail_ed -code $acmtr_code -limit $addtr_limit -period $acmtr_period -scope $acmtr_scope1
-    AutoAdd TR -Ftail $ftail_st $ftail_ed -code $acmtr_code -limit $addtr_limit -period $acmtr_period -scope $acmtr_scope2
+    AutoAdd TR -Ftail $ftail_st $ftail_ed -code $acmtr_code1 -limit $addtr_limit -period $acmtr_period -scope $acmtr_scope1
+    AutoAdd TR -Ftail $ftail_st $ftail_ed -code $acmtr_code1 -limit $addtr_limit -period $acmtr_period -scope $acmtr_scope2
+    AutoAdd TR -Ftail $ftail_st $ftail_ed -code $acmtr_code2 -limit $addtr_limit -period $acmtr_period
   EndIf
 EndIf
 
