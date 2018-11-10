@@ -280,7 +280,7 @@ int main(int argc, const char* argv[])
 	unsigned char *pix1 = (unsigned char*)_aligned_malloc(w * h, 32);
 
 	// start searching
-	for (int i=0; i<n-setseri; i++) {
+	for (int i=0; i<n-setseri-1; i++) {
 		// searching foward frame
 		if (seri == 0 && thin_audio_read > 0) {		// 間引きしながら無音確認
 			int naudio = audio->read_audio(i+setseri-1, buf);

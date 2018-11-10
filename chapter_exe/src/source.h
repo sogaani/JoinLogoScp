@@ -272,6 +272,7 @@ public:
 class AvsSource : public NullSource {
 protected:
 	avs_hnd_t avs_h;
+	AVS_VideoInfo *inf;
 
   BITMAPINFOHEADER format;
   WAVEFORMATEX audio_format;
@@ -322,7 +323,7 @@ public:
         throw "error: inputfile didn't return a video clip";
     }
     avs_h.clip = avs_h.func.avs_take_clip(res, avs_h.env);
-    const AVS_VideoInfo *inf = avs_h.func.avs_get_video_info(avs_h.clip);
+    inf = avs_h.func.avs_get_video_info(avs_h.clip);
     if(!avs_has_video(inf)) {
         throw "error: inputfile has no video data";
     }
@@ -420,6 +421,9 @@ public:
   int read_audio(int frame, short *buf) {
     int64_t start = (int64_t)((double)frame * _ip.audio_format->nSamplesPerSec / _ip.rate * _ip.scale);
 		int64_t end = (int64_t)((double)(frame + 1) * _ip.audio_format->nSamplesPerSec / _ip.rate * _ip.scale);
+    if(end >= inf->num_audio_samples){
+			return 0;
+		}
     avs_h.func.avs_get_audio(avs_h.clip, buf, start, end - start);
     const char *err = avs_h.func.avs_clip_get_error(avs_h.clip);
     if(err) {
