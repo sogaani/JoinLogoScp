@@ -255,11 +255,11 @@ int MultLogo_FileListGet(char *baselist[], const char *filename_src)
 					endf = 1;
 				}
 				else{
-					strcpy(baselist[n], newstr2);                  // folder
 #ifdef _WIN32
+					strcpy(baselist[n], newstr2);                  // folder
 					strcat(baselist[n], FindFileData.cFileName);   // name
 #else
-					strcat(baselist[n], globbuf.gl_pathv[n]);   // name
+					strcpy(baselist[n], globbuf.gl_pathv[n]);   // name
 #endif
 					// sort
 					for(int i=0; i<n; i++){
