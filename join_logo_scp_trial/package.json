@@ -4,6 +4,7 @@
   "description": "",
   "main": "src/jlse.js",
   "scripts": {
+    "start": "node src/jlse.js",
     "lint": "eslint --fix ."
   },
   "repository": {
