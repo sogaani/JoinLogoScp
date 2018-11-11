@@ -5,44 +5,69 @@ const parseParam = require("./param").parse;
 const logoframe = require("./command/logoframe").exec;
 const chapterexe = require("./command/chapterexe").exec;
 const joinlogoframe = require("./command/join_logo_frame").exec;
+const createFilter = require("./output/ffmpeg_filter").create;
 
-const usage = () => {
-  console.log("node jlse.js input.avs|input.ts");
-};
+const argv = require("yargs")
+  .option("input", {
+    alias: "i",
+    type: "string",
+    describe: "path to ts file"
+  })
+  .option("filter", {
+    alias: "f",
+    type: "string",
+    describe: "path to ffmpeg filter output"
+  })
+  .option("avs", {
+    alias: "a",
+    type: "string",
+    describe: "path to avs output"
+  })
+  .demandOption(
+    ["input", "filter", "avs"],
+    "Please provide input, filter and avs arguments to work with this tool"
+  )
+  .check(function(argv) {
+    const ext = path.extname(argv.input);
+    if (ext !== ".ts") {
+      console.error(`invalid file extension ${ext}.`);
+      return false;
+    }
 
-const parseInput = () => {
-  if (process.argv.length < 3) {
-    usage();
-    process.exit(-1);
-  }
+    try {
+      fs.statSync(argv.input);
+    } catch (err) {
+      console.error(`File ${argv.input} not found.`);
+      return false;
+    }
+    return true;
+  })
+  .help().argv;
 
-  const input = process.argv[2];
-  const ext = path.extname(input);
-  if (ext !== ".ts" && ext !== ".avs") {
-    console.error(`invalid file extension ${ext}.`);
-    usage();
-    process.exit(-1);
-  }
+const { INPUT_AVS } = require("./settings");
 
-  try {
-    fs.statSync(input);
-  } catch (err) {
-    console.error(`File ${input} not found.`);
-    usage();
-    process.exit(-1);
-  }
-
-  return input;
+const createAvs = filename => {
+  fs.writeFileSync(
+    INPUT_AVS,
+    `FFIndex("${filename}")
+FFMpegSource2("${filename}", atrack=-1)`
+  );
+  return INPUT_AVS;
 };
 
 const main = () => {
-  const filename = parseInput();
-  const channel = parseChannel(filename);
-  const param = parseParam(channel, filename);
+  const inputFile = argv.input;
+  const ffmpegOutputFile = argv.filter;
+  const avsOutputFile = argv.avs;
+  const avsFile = createAvs(inputFile);
+  const channel = parseChannel(inputFile);
+  const param = parseParam(channel, inputFile);
 
-  chapterexe(filename);
-  logoframe(param, channel, filename);
-  joinlogoframe(param);
+  chapterexe(avsFile);
+  logoframe(param, channel, avsFile);
+  joinlogoframe(param, avsOutputFile);
+
+  createFilter(inputFile, avsOutputFile, ffmpegOutputFile);
 };
 
 main();

@@ -2,7 +2,11 @@ const spawnSync = require("child_process").spawnSync;
 const path = require("path");
 const fs = require("fs");
 
-const { LOGOFRAME, LOGO_PATH, LOGOFRAME_OUTPUT } = require("../settings");
+const {
+  LOGOFRAME_COMMAND,
+  LOGO_PATH,
+  LOGOFRAME_OUTPUT
+} = require("../settings");
 
 const getLogo = logoName => {
   let logo = path.join(LOGO_PATH, `${logoName}.lgd`);
@@ -51,7 +55,7 @@ exports.exec = (param, channel, filename) => {
     args.push(logosub);
   }
   try {
-    spawnSync(LOGOFRAME, args, { stdio: "inherit" });
+    spawnSync(LOGOFRAME_COMMAND, args, { stdio: "inherit" });
   } catch (e) {
     console.error(e);
     process.exit(-1);

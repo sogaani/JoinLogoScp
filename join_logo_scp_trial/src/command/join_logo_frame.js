@@ -2,15 +2,14 @@ const spawnSync = require("child_process").spawnSync;
 const path = require("path");
 
 const {
-  CUT_AVS,
   JL_DIR,
-  JLSCP,
+  JLSCP_COMMAND,
   LOGOFRAME_OUTPUT,
   CHAPTEREXE_OUTPUT,
   JLSCP_OUTPUT
 } = require("../settings");
 
-exports.exec = param => {
+exports.exec = (param, outputFile) => {
   let args = [
     "-inlogo",
     LOGOFRAME_OUTPUT,
@@ -19,7 +18,7 @@ exports.exec = param => {
     "-incmd",
     path.join(JL_DIR, param.JLOGO_CMD),
     "-o",
-    CUT_AVS,
+    outputFile,
     "-oscp",
     JLSCP_OUTPUT,
     "-flags",
@@ -34,7 +33,7 @@ exports.exec = param => {
     args = args.concat(param.JLOGO_OPT2.split(" "));
   }
   try {
-    spawnSync(JLSCP, args, { stdio: "inherit" });
+    spawnSync(JLSCP_COMMAND, args, { stdio: "inherit" });
   } catch (e) {
     console.error(e);
     process.exit(-1);
