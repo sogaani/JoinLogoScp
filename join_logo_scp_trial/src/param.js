@@ -6,6 +6,7 @@ const { PARAM_LIST_1, PARAM_LIST_2 } = require("./settings");
 
 const search = (paramList, channel, filename) => {
   const result = {};
+  const short = channel ? channel.short : "__normal";
 
   for (param of paramList) {
     // コメント行は処理しない
@@ -15,7 +16,7 @@ const search = (paramList, channel, filename) => {
 
     // 放送局の一致確認
     let regexp = new RegExp(`^(?=.*${param.channel})`);
-    const matchChennel = channel.short.match(regexp);
+    const matchChennel = short.match(regexp);
 
     // タイトルの一致確認
     regexp = new RegExp(`^(?=.*${param.title})`);

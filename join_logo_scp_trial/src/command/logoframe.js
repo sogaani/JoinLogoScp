@@ -22,6 +22,10 @@ const getLogo = logoName => {
 };
 
 const selectLogo = channel => {
+  if (!channel) {
+    return null;
+  }
+
   for (key of ["install", "short", "recognize"]) {
     const logo = getLogo(channel[key]);
     if (logo) {
