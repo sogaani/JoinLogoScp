@@ -1,6 +1,8 @@
 const fs = require("fs");
 const ffprobe = require("../command/ffprobe");
 
+const MIN_START_FRAME = 30;
+
 exports.create = (tsFile, trimFile, outputFile) => {
   try {
     const trimString = fs.readFileSync(trimFile).toString();
@@ -10,8 +12,8 @@ exports.create = (tsFile, trimFile, outputFile) => {
 
     while ((result = reg.exec(trimString))) {
       const trimFrame = {
-        start: result[1],
-        end: result[2]
+        start: result[1] < MIN_START_FRAME ? MIN_START_FRAME : result[1],
+        end: result[2] < MIN_START_FRAME ? MIN_START_FRAME : result[2],
       };
       trimFrames.push(trimFrame);
     }
@@ -23,21 +25,15 @@ exports.create = (tsFile, trimFile, outputFile) => {
     let concatString = "";
     for (let i = 0; i < trimFrames.length; i++) {
       const trimFrame = trimFrames[i];
-      filterString += `[0:v]trim=start_frame=${trimFrame.start}:end_frame=${
-        trimFrame.end
-      },setpts=PTS-STARTPTS[v${i}];`;
 
-      const startSample = parseInt(
-        (trimFrame.start * sampleRate * fps.fpsDenominator) / fps.fpsNumerator +
-          0.5,
-        10
+      const startTime = parseFloat(
+        (trimFrame.start * fps.fpsDenominator) / fps.fpsNumerator
       );
-      const endSample = parseInt(
-        (trimFrame.end * sampleRate * fps.fpsDenominator) / fps.fpsNumerator +
-          0.5,
-        10
+      const endTime = parseFloat(
+        (trimFrame.end * fps.fpsDenominator) / fps.fpsNumerator
       );
-      filterString += `[0:a]atrim=start_sample=${startSample}:end_sample=${endSample},asetpts=PTS-STARTPTS[a${i}];`;
+      filterString += `[0:v]trim=${startTime}:${endTime},setpts=PTS-STARTPTS[v${i}];`;
+      filterString += `[0:a]atrim=${startTime}:${endTime},asetpts=PTS-STARTPTS[a${i}];`;
       concatString += `[v${i}][a${i}]`;
     }
     filterString += `${concatString}concat=n=${
