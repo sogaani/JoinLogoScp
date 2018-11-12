@@ -13,12 +13,11 @@ exports.create = (tsFile, trimFile, outputFile) => {
     while ((result = reg.exec(trimString))) {
       const trimFrame = {
         start: result[1] < MIN_START_FRAME ? MIN_START_FRAME : result[1],
-        end: result[2] < MIN_START_FRAME ? MIN_START_FRAME : result[2],
+        end: result[2] < MIN_START_FRAME ? MIN_START_FRAME : result[2]
       };
       trimFrames.push(trimFrame);
     }
 
-    const sampleRate = ffprobe.getSampleRate(tsFile);
     const fps = ffprobe.getFrameRate(tsFile);
 
     let filterString = "";
