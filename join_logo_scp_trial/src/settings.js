@@ -8,6 +8,7 @@ exports.PARAM_LIST_2 = path.join(__dirname, "../setting/JLparam_set2.csv");
 exports.LOGOFRAME_COMMAND = path.join(__dirname, "../bin/logoframe");
 exports.CHAPTEREXE_COMMAND = path.join(__dirname, "../bin/chapter_exe");
 exports.JLSCP_COMMAND = path.join(__dirname, "../bin/join_logo_scp");
+exports.FFPROBE_COMMAND = "/usr/local/bin/ffprobe";
 
 exports.JL_DIR = path.join(__dirname, "../JL");
 exports.LOGO_PATH = path.join(__dirname, "../logo");

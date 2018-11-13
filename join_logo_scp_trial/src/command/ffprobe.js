@@ -1,4 +1,5 @@
-const spawnSync = require("child_process").spawnSync;
+const { spawnSync } = require("child_process");
+const { FFPROBE_COMMAND } = require("../settings");
 
 exports.getFrameRate = filename => {
   const property = exports.getProperty(
@@ -32,7 +33,7 @@ exports.getProperty = (stream, entries, filename) => {
   ];
 
   try {
-    const result = spawnSync("ffprobe", args);
+    const result = spawnSync(FFPROBE_COMMAND, args);
     return result.stdout.toString();
   } catch (e) {
     console.error(e);
