@@ -31,10 +31,10 @@ vaapiを使ってlogoframeやchpter_exeのデコードを行いたい場合は�
 # 実行方法
 
 ```
-npm start -i "TSファイル" -f "出力ffmpegフィルター" -a "出力AVS"
+npm start -- -i "TSファイル" -f "出力ffmpegフィルター" -a "出力AVS"
 ```
 
 例
 ```
-npm start -i "/mnt/share/hoge.ts" -f "/usr/local/hoge.filter" -a "/usr/local/hoge.avs"
+npm start -- -i "/mnt/share/hoge.ts" -f "/usr/local/hoge.filter" -a "/usr/local/hoge.avs"
 ```
