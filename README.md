@@ -1,3 +1,7 @@
+こちらはAvxSynth(AviSynthをLinuxにポーティングしたもの)で動作させています。
+AviSynthがLinuxに対応したのに合わせて、[AviSynth+Linuxで動作するJoinLogoScp](https://github.com/tobitti0/JoinLogoScpTrialSetLinux)が公開されています。
+今から導入する方は上記のものを使うのをおすすめします。
+
 # 概要
 join_logo_scpをLinuxで動作させたい
 
